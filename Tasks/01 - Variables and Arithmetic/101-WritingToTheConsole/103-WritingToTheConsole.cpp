@@ -7,7 +7,7 @@ int main()
 
 
     // ************************ Using printf ******************************* 
-    printf("Hello Everyone. We are using C\nHow are things?\n");
+    printf("Hello Everyone. We are using C How are things?");
     // TASK (a) - remove \n from the string above - what does this change? 
     
     // ******************* Using printf placeholders *********************** 
@@ -20,8 +20,9 @@ int main()
 
     // TASK(b) - Use printf to display the value of the variable area. Look at the lecture slides and find out how to limit this to 3 decimal places
     // Write solution here
+    printf("The area = %5.3f\n, area");
     
-    //
+    
 
     // You can output complex strings to the terminal
     int p = 3;
@@ -30,6 +31,8 @@ int main()
 
     // TASK(c) - using printf, display the radius and the area using a single printf statement
     // Write solution here
+
+    
 
     //
 }

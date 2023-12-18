@@ -19,10 +19,13 @@ namespace COMP1000 {
         void updateArea() {
             //Recalculate
             area = width * height;
+
             //Log IF the file has been opened
-            if (outputStream->is_open()) {
-                (*outputStream) << "width: " << width << ", height: " << height << ", area: " << area << endl;
-            }
+            if (outputStream) {
+                if (outputStream->is_open()) {
+                    (*outputStream) << "width: " << width << ", height: " << height << ", area: " << area << endl;
+                }
+            } 
         }
     public:
         void updateArea(int w, int h)
@@ -76,10 +79,13 @@ namespace COMP1000 {
             cout << "Destructor running";
 
             //Only close a file if it has been opened
-            if (outputStream->is_open()) {
-                outputStream->close();
-                cout << " for " << *fileName;
+            if (outputStream) {
+                if (outputStream->is_open()) {
+                    outputStream->close();
+                    cout << " for " << *fileName;
+                }
             }
+
             cout << endl;
 
             //Free up memory

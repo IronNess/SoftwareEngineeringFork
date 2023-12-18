@@ -15,15 +15,10 @@ In this session, we will look at a very important language feature of C++, that 
    1. [Overloading](#overloading)
    1. [Dynamically Instantiating Objects](#dynamically-instantiating-objects)
    1. [Composition](#composition)
-
-* Templates
-   1. Type parameters
-   1. Non-typed Parameters 
-* Statics
-   1. Members
-   1. Functions
-
-* Challenges
+   1. [Separating Declaration and Definition](#separating-declaration-and-definition)
+* [Template Classes - a first look](#template-classes-a-first-look)
+* [Some Useful Classes](#some-useful-template-classes)
+* [Challenges](#challenges)
 
 ## Pointers and References
 
@@ -765,11 +760,12 @@ delete r1;
 
 * Dynamic memory allocation is a fairly large topic, and is not something you should use unless it is required. C++ is designed to be fast, and to give the developer control so code can be highly optimised. You will discover that other languages have mechanisms to try and automate some of the above. Be aware however that all such techniques come with overheads and a performance penalty. C++ also has some libraries to bring it in line with other languages, but this is too advanced at this stage.
 
-| TASK | (**advanced**) |
+| ADVANCED TASK | You were warned :) |
 | - | - |
 | 3. | Can you change the `Rect` class so that the members `filename` and `output` stream are created dynamically? |
 | - | The idea is that we only use memory for objects if we really need them |
-| - | *This is quite a challenging task*, so only attempt if confident! |
+| - | The types will need to become `string*` and `ofstream*`
+| - | *This is quite a challenging and fussy task*, so only attempt if confident! |
 | - | A solution is provided |
 
 ### Composition
@@ -799,23 +795,275 @@ int main() {
 
 Some objects **require** parameters when they are constructed (they do not have parameterless constructors).
 
+| TASK | 13-Composition |
+| - | - |
+| 1. | Make `13-Composition` the startup project. Build and run |
+| 2. | Inspect `StringBanner.h` to see the new class that has been added. Note the constructor parameters |
+| 2. | Open `Rect.h`. We are now going to add a new member of type `StringBanner` so we can use it in our code. Uncomment the line that reads |
+| - | `//StringBanner banner;` |
+| 3. | Try and build. Note the error message |
+
+You cannot create an object of type `StringBanner` without passing at least one parameter (the text to display)
+
+```C++
+StringBanner banner; //Does not compile as StringBanner has no parameterless constructor
+```
+
+The constructor for `StringBanner` has two parameters.
+
+```C++
+StringBanner(string txt, char bannerCharacter = '*') {
+    msg = txt;
+    bannerChar = bannerCharacter;
+}
+```
+
+The first must be provided. The second is optional, and will use a default value (character `*`) if not provided.
+
+All members must be instantiated before the constructor can run. You can use an initialiser list do this:
+
+| TASK | |
+| - | - |
+| 4. | Modify the constructors of `Rect` as follows |
+
+```C++
+Rect(double w, double h, string id) : banner(id) {
+    banner.display();
+    //Remaining code not shown for brevity
+    ...
+}
+
+Rect(double w, double h) : banner("NO FILE") {
+    banner.display();
+    //Remaining code not shown for brevity
+    ...
+}
+```
+
+What this does is ensure the constructor for object `banner` is run with the required information BEFORE the `Rect` constructor is run. 
+
+> If this were not the case, it would not be possible to invoke `banner.display()` in the constructor.
+
+## Separating Declaration and Definition
+
+Until now, as we create a class, it has all been written in a single header file. In C++, we have the option to split the *declaration* and the *definition* into separate files. 
+
+| TASK | 15-SeparatingDeclarationAndDefinition | 
+| - | - |
+| 1. | [Watch this video](https://plymouth.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=a328c961-7ff5-4c59-933e-b0ad00d8732d) to understand what is meant by separating declaration and definition |
+| 2. | Move the definition of the function `display()` to `StringBanner.cpp` |
+| - | A solution is provided |
 
 
+## Template Classes (a first look)
 
-## Templates
+In this section, we will take a brief look at a very powerful feature, known as templates.
 
-### Type parameters
+Sometimes when we write a class, we find out that we want to write it again, only with different data types. Let's look at an example:
 
-### Non-typed Parameters 
+| TASK | 17-SimpleTemplateClass |
+| - | - |
+| 1. | Make `17-SimpleTemplateClass` the startup project |
+| 2. | Look closely at the `Point` class in `Point.h` |
+| 3. | Build and run the code, and check the output. Do you notice anything "misleading"? |
+| 4. | In both cases, step into the constructor of each object `p1` and `p2`. Check the values that are actually passed into these functions |
 
-## Statics
+`Point` was written on the assumption that only integers would be used. As long as integers are used, everything works fine.
 
-### Members
+```C++
+Point p1(4, 5);
+p1.display();
+cout << p1.max() << endl;
+```
 
-### Functions
+However, the following was also allowed:
 
+```C++
+Point p2(4.0f, 4.5f);
+p2.display();
+cout << p2.max() << endl;
+```
 
+The two floating point values `4.0f` and `4.5f` are not integers, so they are automatically converted by rounding. This results in `p2.max()` returning a value of `4` which is very misleading!
 
+Implicit type conversion like this is usually best avoided for these very reasons. 
 
+One solution is to write another class `Point_f`, that uses floating point values instead. However, if you try this, you will likely find that most of the code would be identical! Luckily, C++ (and many other languages) has a facility to generate different versions of your code for data types.
+
+In C++ this is called **templates**
+
+| TASK |  |
+| - | - |
+| 5. | Now open the file `Point2.h` and look at the code. How much has actually changed? |
+| 6. | In `main`, change the type of `p1` to `Point2<int>` and `p2` to `Point2<float>` |
+| 7. | Build and run again |
+
+**Key Points**
+
+* The class `Point2` is no longer a class. It is a template for a class. Another expression might be a "blueprint".
+
+```C++
+template<class DataType>
+class Point2 {
+...
+```
+
+Each time you create an instance of `Point2`, you provide a concrete type for `DataType`.
+
+For example:
+
+```C++
+Point2<int> p1(4, 5);
+```
+
+The compiler then create a new class, substituting `int` for `DataType`. If we then create another using a float:
+
+```C++
+Point2<float> p1(4.0f, 4.5f);
+```
+
+the compiler with create *another* version of the class, this time substituting `float` for `DataType`.
+
+Now consider the member function `max`
+
+```C++
+DataType max() {
+    if (x >= y) {
+        return x;
+    }
+    else {
+        return y;
+    }
+}
+```
+
+* The expression `(x >= y)` will ultimately be compiled to machine code. For arithmetic operations, the code that is generated will often vary significantly for different  data types.
+
+* We have managed to **re-use** one version of our source code for multiple different data types.
+
+At this stage, writing code in this style may seem a bit ambitious (this is a fairly advanced topic). However, it is quite likely that you will reuse template classes written by others. Hopefully, the above has given you enough insight to understand the why some of the syntax looks the way it does. 
+
+## Some Useful Template Classes
+
+There are a number of existing template classes that are commonly used.
+
+* `array<T, N>` - Fixed size array of N values of type T
+* `vector<T>` - Variable sized list of values of type T
+* `map<T,P>` - Collectiob of "key-value" pairs, where the key used to look-up a value
+
+| TASK | 19-UsefulTemplateClasses |
+| - | - |
+| 1. | Make `19-UsefulTemplateClasses` the start up project |
+| 2. | Build the code, and step through, reading the comments |
+
+This task simply provides examples. 
+
+### vector template class
+
+The `vector` is the one that is most commonly used and deserves some further attention. A vector is a list of values. Unlike an array, it can grow in size as more data is added. It is also a template class, so can contain different data types (even other class types). For example, to hold a list of values of type `double`, we would create the `vector` as follows:
+
+```C++
+vector<double> vec;
+```
+
+You can add a sample to the vector with the `push_back` function. For example: 
+
+```C++
+vec.push_back(1.23); 
+vec.push_back(2.34); 
+vec.push_back(3.45); 
+```
+
+We can read the vector as if it was an array:
+
+```C++
+double u = vec[1];  //2.34
+```
+
+We can look through a vector:
+
+```C++
+for (unsigned int n = 0; n < vec.size(); n++) {
+    cout << vec[n] << endl;
+    }
+```
+
+Using *modern* syntax, there is now a more concise form:
+
+```C++
+for (double x : vec) {
+    cout << x << endl;
+}
+```
+
+Vector is incredibly useful and there isn't the time to do it justice here.
+
+> You are recommended to read up on examples of using `vector` as it is so pervasive.
+
+We will meet `vector` (and others) in other examples as we proceed through the course.
 
 # Challenges
+
+The challenges for this lab are particularly important. There is a large gap between following lab tasks and writing your own code. You are encouraged to try all challenges. In some cases, if solution is provided, this is not THE solution as there may be multiple ways to achieve the same goals.
+
+| Challenge 1 | 20-Challenge1-StudentRecord | 
+| - | - |
+| 1. | Make `20-Challenge1-StudentRecord` the start up project |
+| 2. | Read through `StudentRecord.h` |
+| 3. | Complete all the functions in the class |
+| 4. | Add code to `main` to test the class |
+
+In the next challenge, less is provided as a starting point. This is so you can start to practise on your own.
+
+| Challenge 2 | 22-Challenge2-ModuleRecord |
+| - | - |
+| 1. | Make `22-Challenge2-ModuleRecord` the starup module |
+| 2. | Open `ModuleRecord.h` - it is mostly empty! |
+| 3. | Open `ModuleRecord.cpp` - it is mostly empty! |
+| 4. | Complete this class to meet the requirements below |
+| 5. | Optional - write all function definitions in the CPP file |
+| 6. | Write code in main to test the class |
+
+**Requirement** - The following information should be encapsulated:
+
+* Module name (string)
+* Module subject area (string, default is COMP)
+* Module code (unsigned integer)
+* Number of credits per semester (unsigned integer, default is 20)
+* Number of semesters (unsigned integer, default is 1)
+
+Once initialized, none of the information can be updated.
+
+**Requirement** - The following APIs need to be created:
+
+* `string moduleSummary()` - returns a string that describes all information about the module
+* `int totalCredits()` - returns the total number of credits (Number of credits per semester multiplied by the Number of semesters)
+
+If you have some spare time and want an advanced challenge, then try challenge 3.
+
+| Challenge 3 | 24-Challenge3-YearRecord (advanced)|
+| - | - |
+| 1. | Make `24-Challenge3-YearRecord` the start up project |
+| 2. | Create a class to encapsulate data about an academic year on a given program |
+| 3. | Modify main to test it |
+
+The following information should be encapsulated (minimum set):
+
+* The number of students in the year (fixed once set)
+* The number of modules in the year (fixed once set)
+* An array of modules (array of type `ModuleRecord`)
+* An array of students (array of type `StudentRecord`)
+
+The following functionality needs to be added:
+
+* Ability to add a student
+* Ability to add a module
+* Ability to check if a student is in the year
+
+> Tip
+>
+> You can either use simple primitive arrays, or you might want to research the vector type.
+
+---
+
+[Back to Table of Contents](./README.md)
